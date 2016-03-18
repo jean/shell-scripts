@@ -6,27 +6,25 @@
 # this shell script tries best to find more accurate results. Script use 2 files ie /proc//status (to get name of process)
 # and /proc//smaps for memory statistic of process. Then script will convert all data into Kb, Mb, Gb. 
 # Also make sure you install bc command.
-
-
-Source : http://www.linoxide.com/linux-shell-script/linux-memory-usage-program/
-Parent : http://www.linoxide.com/guide/scripts-pdf.html
-
-# Make sure only root can run our script
+# 
+# Source : http://www.linoxide.com/linux-shell-script/linux-memory-usage-program/
+# Parent : http://www.linoxide.com/guide/scripts-pdf.html
+# 
 
 if [ "$(id -u)" != "0" ]; then
-   echo "This script must be run as root" 1>&2
-   exit 1
+   echo "Reporting memory usage only for the current user. Run as root to get usage for all processes." 1>&2
 fi
+
 
 ### Functions
 #This function will count memory statistic for passed PID
 get_process_mem ()
 {
 PID=$1
-#we need to check if 2 files exist
-if [ -f /proc/$PID/status ];
+#we need to check if 2 files exist (and are readable)
+if [ -r /proc/$PID/status ];
 then
-	if [ -f /proc/$PID/smaps ]; 
+	if [ -r /proc/$PID/smaps ]; 
 	then
 		#here we count memory usage, Pss, Private and Shared = Pss-Private
 		Pss=`cat /proc/$PID/smaps | grep -e "^Pss:" | awk '{print $2}'| paste -sd+ | bc `
@@ -48,7 +46,7 @@ then
 fi
 }
 
-#this function make conversion from bytes to Kb or Mb or Gb
+#this function make conversion from bytes to KB or MB or GB
 convert()
 {
 value=$1
@@ -66,12 +64,12 @@ do
 	let power=$power+1
 done
 
-#this part get b,kb,mb or gb according to number of divisions 
+#this part get B,KB,MB or GB according to number of divisions 
 case $power in
-	0) reg=b;;
-	1) reg=kb;;
-	2) reg=mb;;
-	3) reg=gb;;
+	0) reg=B;;
+	1) reg=KB;;
+	2) reg=MB;;
+	3) reg=GB;;
 esac
 
 echo -n "${value} ${reg} "
@@ -83,7 +81,9 @@ echo -n "${value} ${reg} "
 [[ -f /tmp/res3 ]] && rm -f /tmp/res3
 
 
-#if argument passed script will show statistic only for that pid, of not � we list all processes in /proc/ #and get statistic for all of them, all result we store in file /tmp/res
+# If argument passed, script will show statistics only for that PID, if not,
+# we list all processes in /proc/ and get statistics for all of them. 
+# All result we store in file /tmp/res
 if [ $# -eq 0 ]
 then
 	pids=`ls /proc | grep -e [0-9] | grep -v [A-Za-z] `
@@ -100,7 +100,7 @@ fi
 cat /tmp/res | sort -gr -k 5 > /tmp/res2
 
 #this part will get uniq names from process list, and we will add all lines with same process list 
-#we will count nomber of processes with same name, so if more that 1 process where will be
+#we will count number of processes with same name, so if more that 1 process where will be
 # process(2) in output
 for Name in `cat /tmp/res2 | awk '{print $6}' | sort  | uniq`
 do
