@@ -22,9 +22,9 @@ get_process_mem ()
 {
 PID=$1
 #we need to check if 2 files exist (and are readable)
-if [ -r /proc/$PID/status ];
+if test -r /proc/$PID/status && head -n 1 /proc/$PID/status 2>/dev/null 1>/dev/null;
 then
-	if [ -r /proc/$PID/smaps ]; 
+	if test -r /proc/$PID/smaps && head -n 1 /proc/$PID/smaps 2>/dev/null 1>/dev/null; 
 	then
 		#here we count memory usage, Pss, Private and Shared = Pss-Private
 		Pss=`cat /proc/$PID/smaps | grep -e "^Pss:" | awk '{print $2}'| paste -sd+ | bc `
